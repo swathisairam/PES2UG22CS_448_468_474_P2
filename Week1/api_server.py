@@ -8,19 +8,24 @@ app = Flask(__name__)
 nodes = {}
 
 @app.route('/add_node', methods=['POST'])
+@app.route('/add_node', methods=['POST'])
 def add_node():
     data = request.json
     if "cpu_cores" not in data:
         return jsonify({"error": "Missing CPU cores"}), 400
-    
-    node_id = str(uuid.uuid4())[:8]  # Generate unique node ID
+
+    node_id = str(uuid.uuid4())[:8]
     cpu_cores = data["cpu_cores"]
-
-    # Launch a new container simulating a node
     container_name = f"node_{node_id}"
-    subprocess.run(["docker", "run", "-d", "--name", container_name, "ubuntu", "sleep", "infinity"])
 
-    # Store node details
+    # Try launching container and log the output
+    result = subprocess.run(
+        ["docker", "run", "-d", "--name", container_name, "ubuntu", "sleep", "infinity"],
+        capture_output=True, text=True
+    )
+    print("STDOUT:", result.stdout)
+    print("STDERR:", result.stderr)
+
     nodes[node_id] = {"cpu_cores": cpu_cores, "status": "active"}
 
     return jsonify({"message": "Node added", "node_id": node_id}), 201
